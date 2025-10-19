@@ -11,7 +11,7 @@
     --card:#0f1113;
     --fg:#ffffff;
     --muted:#bfc5c9;
-    --accent:#ff2b2b;
+    --accent:#ff2b2b; /* red */
     --ok:#2ee58d;
     --warn:#ffb84d;
     --glass: rgba(255,255,255,0.02);
@@ -28,64 +28,298 @@
     display:flex;align-items:flex-start;justify-content:center;padding:30px;
     -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
   }
+
+  /* container */
   .wrap{
     width:1100px;max-width:96%;border-radius:var(--radius);
     background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.002));
     box-shadow: 0 18px 60px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.01);
     padding:28px;display:flex;flex-direction:column;gap:18px;
   }
+
+  header{display:flex;flex-direction:column;align-items:center;gap:6px}
+  .logo{width:92px;height:92px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+        background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.008));
+        box-shadow: 0 8px 26px rgba(0,0,0,0.6); animation: bob 3.8s ease-in-out infinite;}
+  @keyframes bob{0%{transform:translateY(0)}50%{transform:translateY(-6px)}100%{transform:translateY(0)}}
+  .title{margin:0;font-size:22px;font-weight:800;letter-spacing:1px;text-transform:uppercase}
+  .subtitle{margin:0;color:var(--muted);font-size:13px}
+
+  /* main layout: left big click area, right graph/stats */
+  .main{
+    display:flex;gap:18px;align-items:stretch;
+  }
+  .left{
+    flex:1.6;min-width:640px;display:flex;flex-direction:column;gap:14px;
+  }
+  .right{
+    flex:1;min-width:320px;display:flex;flex-direction:column;gap:12px;
+  }
+
+  /* big click box */
   .clickbox{
-    height:480px;border-radius:12px;
-    background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.02), transparent 7%),
-                linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
+    height:480px;border-radius:12px;background:
+      radial-gradient(circle at 30% 25%, rgba(255,255,255,0.02), transparent 7%),
+      linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));
     border:1px solid rgba(255,255,255,0.04);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;
-    overflow:hidden;cursor:pointer;transition:transform 140ms ease, box-shadow 220ms; user-select:none;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;cursor:pointer;
+    transition:transform 140ms ease, box-shadow 220ms; user-select:none;
   }
   .clickbox:active{transform:scale(0.997)}
   .inactive{opacity:0.6}
-  /* Sleek shockwave */
-  .shock {
-    position: absolute;
-    border-radius: 50%;
-    transform: translate(-50%, -50%) scale(0);
-    opacity: 0.9;
-    pointer-events: none;
-    border: 2px solid rgba(255, 255, 255, 0.25);
-    background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%);
-    animation: shock 600ms cubic-bezier(.25, .8, .25, 1) forwards;
+
+  .metrics{
+    text-align:center;
   }
-  @keyframes shock {
-    0% { transform: translate(-50%, -50%) scale(0.1); opacity: 0.95; }
-    60% { transform: translate(-50%, -50%) scale(1.5); opacity: 0.35; }
-    100% { transform: translate(-50%, -50%) scale(2.4); opacity: 0; }
+  .cps{font-size:84px;font-weight:900;letter-spacing:1px;margin:0;color:var(--fg)}
+  .sub{color:var(--muted);font-size:14px;margin-top:6px}
+
+  /* shockwave */
+  .shock{position:absolute;border-radius:50%;transform:translate(-50%,-50%) scale(0);opacity:0.9;
+        pointer-events:none;border:2px solid rgba(255,255,255,0.06);animation:shock 680ms cubic-bezier(.2,.8,.2,1) forwards;}
+  @keyframes shock{0%{transform:translate(-50%,-50%) scale(0.1);opacity:0.95}60%{transform:translate(-50%,-50%) scale(1.6);opacity:0.28}
+  100%{transform:translate(-50%,-50%) scale(2.6);opacity:0}}
+
+  /* small controls (bottom-right overlay inside left column) */
+  .controls{
+    display:flex;gap:10px;align-self:flex-end;margin-top:8px;
   }
+  .btn{
+    background:transparent;border:1px solid rgba(255,255,255,0.06);padding:10px 12px;border-radius:10px;color:var(--fg);cursor:pointer;
+    font-weight:700;letter-spacing:0.6px;position:relative;overflow:hidden;transition:transform 150ms cubic-bezier(.2,.9,.3,1), box-shadow 150ms;
+  }
+  .btn:active{transform:translateY(2px) scale(0.994);box-shadow:none}
+  .btn.primary{border-color:rgba(255,255,255,0.08);background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.008));}
+  .btn:focus{outline:2px solid rgba(255,255,255,0.04)}
+
+  /* small badge for watchdog alert */
+  .watchdog-badge{
+    position:absolute;right:18px;top:18px;padding:8px 12px;border-radius:999px;background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.008));
+    border:1px solid rgba(255,255,255,0.03);font-weight:800;letter-spacing:0.6px;font-size:13px;color:var(--muted)
+  }
+  .watchdog-badge.alert{background:linear-gradient(90deg, rgba(255,43,43,0.12), rgba(255,43,43,0.04)); color:var(--accent); box-shadow:0 6px 26px rgba(255,43,43,0.06)}
+
+  /* stats card */
+  .card{background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);border-radius:10px;padding:12px;border:1px solid rgba(255,255,255,0.03)}
+  .stat-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed rgba(255,255,255,0.03)}
+  .stat-row:last-child{border-bottom:0}
+  .muted{color:var(--muted);font-size:13px}
+  .verdict{margin-top:10px;padding:10px;border-radius:10px;font-weight:800;text-align:center}
+  .verdict.good{background:linear-gradient(90deg, rgba(46,229,141,0.06), transparent);color:var(--ok)}
+  .verdict.warn{background:linear-gradient(90deg, rgba(255,184,77,0.06), transparent);color:var(--warn)}
+  .verdict.bad{background:linear-gradient(90deg, rgba(255,43,43,0.08), transparent);color:var(--accent)}
+
+  /* right column graph + log */
+  .graph-wrap{height:360px;border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:8px}
+  #graphCanvas{width:100%;height:100%;background:transparent;border-radius:8px}
+  .log{flex:1;overflow:auto;font-size:13px;color:var(--muted);padding:6px;border-radius:8px}
+
+  /* responsive */
+  @media (max-width:1100px){ .left{min-width:520px} }
+  @media (max-width:880px){
+    .main{flex-direction:column}
+    .left{min-width:0}
+    .right{min-width:0}
+    .clickbox{height:420px}
+  }
+
+  /* subtle animations for suspicion pulse on high alert */
+  .alert-pulse{
+    position:absolute;inset:-6px;border-radius:14px;pointer-events:none;mix-blend-mode:screen;
+    box-shadow:0 0 0 rgba(255,43,43,0.0);animation:alertPulse 1.1s ease-in-out infinite;
+  }
+  @keyframes alertPulse{
+    0%{box-shadow:0 0 0 0 rgba(255,43,43,0.0)}
+    50%{box-shadow:0 0 40px 8px rgba(255,43,43,0.08)}
+    100%{box-shadow:0 0 0 0 rgba(255,43,43,0.0)}
+  }
+
+  /* small helper */
+  .small{font-size:13px;color:var(--muted)}
+  .bignum{font-family:var(--mono);font-weight:800}
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>REJOS TIER TESTING</h1>
-    <p>Click or right-click inside the box to start — detects synthetic clicks.</p>
-    <div id="clickbox" class="clickbox inactive" tabindex="0">
-      <div id="alertPulse" class="alert-pulse" style="display:none"></div>
-      <div class="metrics">
-        <div id="cpsDisplay" style="font-size:64px;font-weight:900;">0.00</div>
-        <div style="font-size:14px;color:var(--muted)">CPS (1s window)</div>
+  <div class="wrap" role="main" aria-labelledby="mainTitle">
+    <header>
+      <div class="logo" title="REJOS logo">
+        <img src="https://raw.githubusercontent.com/rejoicine/cpstest/main/Screenshot%202025-10-19%20045107.png"
+             alt="REJOS logo" style="width:78px;height:78px;border-radius:50%;object-fit:cover" />
+      </div>
+      <h1 id="mainTitle" class="title">REJOS TIER TESTING</h1>
+      <p class="subtitle">Click inside the box to start — Watchdog-style analysis runs continuously.</p>
+    </header>
+
+    <div class="main">
+      <!-- LEFT: large click box and controls -->
+      <div class="left">
+        <div id="clickbox" class="clickbox inactive" tabindex="0" role="button" aria-label="Click zone">
+          <div id="alertPulse" class="alert-pulse" style="display:none"></div>
+          <div class="watchdog-badge" id="badge">Idle</div>
+
+          <div class="metrics">
+            <div class="cps bignum" id="cpsDisplay">0.00</div>
+            <div class="sub">Current CPS (1s window)</div>
+            <div style="height:18px"></div>
+            <div class="small muted">Auto-start on first click • Reset / Copy available</div>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;margin-top:10px;gap:8px">
+          <div class="controls">
+            <button id="resetBtn" class="btn">Reset</button>
+            <button id="copyBtn" class="btn primary">Copy result</button>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;margin-top:14px">
+          <div class="card" style="flex:1">
+            <div class="stat-row"><div class="muted">Total clicks</div><div id="totalClicks">0</div></div>
+            <div class="stat-row"><div class="muted">Average CPS (session)</div><div id="avgCps">0.00</div></div>
+            <div class="stat-row"><div class="muted">Std dev (recent)</div><div id="stdDev">—</div></div>
+            <div class="stat-row"><div class="muted">Entropy</div><div id="entropy">—</div></div>
+            <div class="stat-row"><div class="muted">Pattern</div><div id="pattern">—</div></div>
+            <div class="stat-row"><div class="muted">Suspicion</div><div id="suspicion">—</div></div>
+            <div id="verdict" class="verdict small">Idle</div>
+          </div>
+
+          <div class="card" style="width:220px;flex-shrink:0">
+            <div style="font-weight:800;margin-bottom:8px">Tips</div>
+            <div class="small">To test mid-session switching, click naturally then toggle your macro — the detector prioritizes recent windows and raises suspicion quickly on sudden regularity.</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: graph + log -->
+      <div class="right">
+        <div class="card graph-wrap">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="font-weight:800">Live Graph</div>
+            <div class="small muted">Intervals (white) • CPS (red)</div>
+          </div>
+          <canvas id="graphCanvas"></canvas>
+          <div style="font-size:12px;color:var(--muted);margin-top:4px">Last ~60 intervals and CPS per second.</div>
+        </div>
+
+        <div class="card" style="padding:10px">
+          <div style="font-weight:800;margin-bottom:6px">Session log</div>
+          <div id="log" class="log">No data yet.</div>
+        </div>
       </div>
     </div>
+
+    <footer style="text-align:center;margin-top:6px;color:var(--muted);font-size:13px">Black & white • Red accents • Watchdog-style continuous detection</footer>
   </div>
 
 <script>
+/* REJOS Watchdog-style CPS Detector
+   - Auto-start on first click inside clickbox
+   - Sliding window analysis, entropy, autocorrelation, sudden-shift detection
+   - Suspicion score with decay; visual escalation (alert pulse + badge)
+   - Side canvas graph shows intervals (white) and CPS (red)
+*/
+
+/* ========= DOM ========= */
 const clickBox = document.getElementById('clickbox');
 const cpsDisplay = document.getElementById('cpsDisplay');
-let clicks = [];
+const totalClicksEl = document.getElementById('totalClicks');
+const avgCpsEl = document.getElementById('avgCps');
+const stdDevEl = document.getElementById('stdDev');
+const entropyEl = document.getElementById('entropy');
+const patternEl = document.getElementById('pattern');
+const suspicionEl = document.getElementById('suspicion');
+const verdictEl = document.getElementById('verdict');
+const badge = document.getElementById('badge');
+const logEl = document.getElementById('log');
+const alertPulse = document.getElementById('alertPulse');
+const resetBtn = document.getElementById('resetBtn');
+const copyBtn = document.getElementById('copyBtn');
+
+const canvas = document.getElementById('graphCanvas');
+const ctx = canvas.getContext('2d');
+
+/* ========= state ========= */
 let running = false;
+let clicks = []; // performance.now() timestamps
+let totalClicks = 0;
+let sessionStart = null;
+let suspicion = 0; // 0..1
+let lastAnalyze = 0;
 
-clickBox.addEventListener('contextmenu', e => e.preventDefault());
-clickBox.addEventListener('mousedown', e => {
-  if (e.button === 0 || e.button === 2) onClick(e);
-});
+/* ========= params ========= */
+const ANALYZE_WINDOW = 20;      // prioritize last N clicks
+const GRAPH_INTERVALS = 60;     // how many intervals to plot
+const BIN_MS = 8;               // entropy bin size
+const HUMAN_CPS_SOFT = 20;      // soft human CPS threshold
+const HUMAN_CPS_HARD = 26;      // hard threshold
+const SUSPICION_DECAY = 0.015;  // per analyze tick
+const SUSPICION_RISE_CAP = 0.18; // how much suspicion can rise per analyze
 
+/* ========= helpers ========= */
+function appendLog(txt){
+  const tm = new Date().toLocaleTimeString();
+  if(logEl.innerHTML === 'No data yet.') logEl.innerHTML = '';
+  const d = document.createElement('div');
+  d.textContent = `[${tm}] ${txt}`;
+  logEl.prepend(d);
+  while(logEl.children.length > 300) logEl.removeChild(logEl.lastChild);
+}
+
+function stdev(arr){
+  if(arr.length===0) return 0;
+  const m = arr.reduce((a,b)=>a+b,0)/arr.length;
+  const v = arr.reduce((a,b)=>a+Math.pow(b-m,2),0)/arr.length;
+  return Math.sqrt(v);
+}
+
+// approximate entropy via histogram bins
+function intervalEntropy(intervals){
+  if(intervals.length < 3) return 0;
+  const bins = {};
+  for(const v of intervals){
+    const b = Math.round(v / BIN_MS) * BIN_MS;
+    bins[b] = (bins[b] || 0) + 1;
+  }
+  const total = intervals.length;
+  let e=0;
+  for(const k in bins){
+    const p = bins[k]/total;
+    e -= p * Math.log2(p);
+  }
+  const maxEnt = Math.log2(Math.min(total, Object.keys(bins).length || 2));
+  return maxEnt>0 ? (e/maxEnt)*100 : 0;
+}
+
+// autocorrelation-like pattern detection
+function patternScore(intervals){
+  if(intervals.length < 4) return 0;
+  let score=0;
+  for(let i=0;i+2<intervals.length;i++){
+    const d1 = Math.abs(intervals[i]-intervals[i+1]);
+    const d2 = Math.abs(intervals[i]-intervals[i+2]);
+    if(d1 < 6 && d2 < 6) score++;
+    else if(d1 < 12 && d2 < 12) score += 0.5;
+  }
+  return (score / Math.max(1, intervals.length)) * 100;
+}
+
+// sudden shift detection: compare older variability vs recent
+function suddenShift(allIntervals, recentStd){
+  if(allIntervals.length < 30) return 0;
+  const oldStart = Math.max(0, allIntervals.length - 50);
+  const oldEnd = Math.max(0, allIntervals.length - 20);
+  const oldSlice = allIntervals.slice(oldStart, oldEnd);
+  if(oldSlice.length < 4) return 0;
+  const oldStd = stdev(oldSlice);
+  if(oldStd > 0 && recentStd > 0){
+    const ratio = oldStd / recentStd;
+    if(ratio > 3 && recentStd < 14) return Math.min(0.5, (ratio - 2) * 0.12);
+  }
+  return 0;
+}
+
+/* ========= UI visuals ========= */
 function spawnShock(x,y){
   const rect = clickBox.getBoundingClientRect();
   const el = document.createElement('div');
@@ -96,22 +330,260 @@ function spawnShock(x,y){
   el.style.left = (x - rect.left) + 'px';
   el.style.top = (y - rect.top) + 'px';
   clickBox.appendChild(el);
-  setTimeout(()=>el.remove(),700);
+  setTimeout(()=>el.remove(),720);
+}
+
+function setAlert(on){
+  if(on){
+    alertPulse.style.display = 'block';
+    badge.classList.add('alert');
+    badge.innerText = 'WATCHDOG: ALERT';
+  } else {
+    alertPulse.style.display = 'none';
+    badge.classList.remove('alert');
+    badge.innerText = 'Monitoring';
+  }
+}
+
+/* ========= Graphing ========= */
+function fitCanvas(){
+  const DPR = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * DPR;
+  canvas.height = rect.height * DPR;
+  ctx.setTransform(DPR,0,0,DPR,0,0); // scale to CSS
+}
+window.addEventListener('resize', ()=>{ fitCanvas(); drawGraph([] , []); });
+fitCanvas();
+
+function drawGraph(intervals, cpsHistory){
+  // intervals: array of ms values (latest last)
+  // cpsHistory: array of cps values aligned to same length or shorter
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  ctx.clearRect(0,0,w,h);
+  // background subtle grid
+  ctx.fillStyle = 'rgba(255,255,255,0.01)';
+  ctx.fillRect(0,0,w,h);
+  // padding
+  const pad = 12;
+  const innerW = w - pad*2, innerH = h - pad*2;
+  // prepare data slice
+  const len = Math.max(intervals.length, GRAPH_INTERVALS);
+  const data = intervals.slice(-GRAPH_INTERVALS);
+  // compute max interval (cap)
+  const maxI = Math.max(60, ...data);
+  // draw intervals polyline (white)
+  if(data.length>0){
+    ctx.beginPath();
+    ctx.lineWidth = 1.8;
+    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+    for(let i=0;i<data.length;i++){
+      const x = pad + (i/(Math.max(1,data.length-1))) * innerW;
+      const y = pad + innerH - (Math.min(data[i],maxI)/maxI) * innerH;
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+    // markers
+    for(let i=0;i<data.length;i++){
+      const x = pad + (i/(Math.max(1,data.length-1))) * innerW;
+      const y = pad + innerH - (Math.min(data[i],maxI)/maxI) * innerH;
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.beginPath(); ctx.arc(x,y,2,0,Math.PI*2); ctx.fill();
+    }
+  }
+
+  // draw CPS history (red) scaled to top
+  if(cpsHistory && cpsHistory.length>0){
+    const cpsMax = Math.max(5, ...cpsHistory, HUMAN_CPS_SOFT);
+    ctx.beginPath();
+    ctx.lineWidth = 2.0;
+    ctx.strokeStyle = 'rgba(255,43,43,0.95)';
+    for(let i=0;i<cpsHistory.length;i++){
+      const x = pad + (i/(Math.max(1,cpsHistory.length-1))) * innerW;
+      const y = pad + innerH - (Math.min(cpsHistory[i],cpsMax)/cpsMax) * innerH;
+      if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+  }
+
+  // axis labels
+  ctx.fillStyle = 'rgba(255,255,255,0.22)';
+  ctx.font = '11px Inter, Arial';
+  ctx.fillText('Intervals (ms)', pad+2, pad+12);
+  ctx.fillStyle = 'rgba(255,43,43,0.85)';
+  ctx.fillText('CPS', w - pad - 30, pad+12);
+}
+
+/* ========= Analysis ========= */
+function analyze(){
+  if(clicks.length < 2) return updateDisplaysMinimal();
+  const now = performance.now();
+  lastAnalyze = now;
+
+  // compute all intervals
+  const allIntervals = [];
+  for(let i=1;i<clicks.length;i++) allIntervals.push(clicks[i] - clicks[i-1]);
+
+  // recent window
+  const recentClicks = clicks.slice(-ANALYZE_WINDOW);
+  const intervals = [];
+  for(let i=1;i<recentClicks.length;i++) intervals.push(recentClicks[i] - recentClicks[i-1]);
+  if(intervals.length === 0) return;
+
+  const mean = intervals.reduce((a,b)=>a+b,0)/intervals.length;
+  const recentStd = stdev(intervals);
+  const ent = intervalEntropy(intervals);
+  const pat = patternScore(intervals);
+
+  // cps window (clicks in last 1000ms)
+  let within1s = 0;
+  const tnow = performance.now();
+  for(let i=clicks.length-1;i>=0;i--){
+    if(tnow - clicks[i] <= 1000) within1s++; else break;
+  }
+  const cps = within1s;
+  const elapsedSec = Math.max(0.0001,(tnow - sessionStart)/1000);
+  const avg = (clicks.length / elapsedSec);
+
+  // compute suspicion bump (bounded)
+  let bump = 0;
+  if(recentStd < 10) bump += 0.22;
+  if(recentStd < 7) bump += 0.18;
+  if(ent < 45) bump += 0.10;
+  if(ent < 25) bump += 0.12;
+  if(pat > 35) bump += 0.12;
+  if(pat > 65) bump += 0.08;
+  if(cps > HUMAN_CPS_SOFT) bump += 0.10;
+  if(cps > HUMAN_CPS_HARD) bump += 0.12;
+  bump += suddenShift(allIntervals, recentStd);
+
+  // cap bump per tick and apply
+  bump = Math.min(SUSPICION_RISE_CAP, bump);
+  suspicion = Math.min(1, Math.max(0, suspicion*(1 - SUSPICION_DECAY) + bump));
+
+  // small automatic decay when nothing suspicious
+  if(bump === 0){
+    suspicion = Math.max(0, suspicion - (SUSPICION_DECAY*1.2));
+  }
+
+  // update displays
+  cpsDisplay.textContent = cps.toFixed(2);
+  totalClicksEl.textContent = totalClicks;
+  avgCpsEl.textContent = avg.toFixed(2);
+  stdDevEl.textContent = recentStd.toFixed(2) + ' ms';
+  entropyEl.textContent = ent.toFixed(1) + ' / 100';
+  patternEl.textContent = pat.toFixed(1) + ' / 100';
+  suspicionEl.textContent = Math.round(suspicion*100) + ' %';
+
+  // verdict tiers
+  let verdict = 'Likely human', cls='good';
+  if(suspicion >= 0.75){ verdict = 'Very likely an autoclicker / macro'; cls='bad'; }
+  else if(suspicion >= 0.45){ verdict = 'Suspected macro / automated clicks'; cls='warn'; }
+  verdictEl.textContent = verdict;
+  verdictEl.className = `verdict ${cls}`;
+
+  // badge + alert visuals
+  if(suspicion > 0.5){
+    setAlert(true);
+  } else {
+    setAlert(false);
+  }
+
+  // log periodic events
+  if(totalClicks % 8 === 0){
+    appendLog(`#${totalClicks} • CPS:${cps} • std:${recentStd.toFixed(1)}ms • ent:${ent.toFixed(1)} • pat:${pat.toFixed(1)} • score:${Math.round(suspicion*100)}%`);
+  }
+
+  // draw graph
+  const intervalsForGraph = allIntervals.slice(-GRAPH_INTERVALS);
+  // build cps history aligned to intervals length
+  const cpsHist = buildCpsHistory(clicks, intervalsForGraph.length);
+  drawGraph(intervalsForGraph, cpsHist);
+}
+
+/* Build a CPS history array (per-second) aligned to length */
+function buildCpsHistory(clicks, length){
+  const res = [];
+  const now = performance.now();
+  for(let i=length-1;i>=0;i--){
+    const t0 = now - (length - i)*1000;
+    const t1 = t0 + 1000;
+    let count=0;
+    for(let j=clicks.length-1;j>=0;j--){
+      if(clicks[j] >= t0 && clicks[j] < t1) count++;
+      if(clicks[j] < t0) break;
+    }
+    res.push(count);
+  }
+  return res;
+}
+
+function updateDisplaysMinimal(){
+  cpsDisplay.textContent = '0.00';
+  totalClicksEl.textContent = totalClicks;
+}
+
+/* ========= events ========= */
+
+// auto-start on first click inside box
+function startIfNeeded(){
+  if(!running){
+    running = true;
+    sessionStart = performance.now();
+    clickBox.classList.remove('inactive');
+    appendLog('Session auto-started (click detected).');
+  }
 }
 
 function onClick(e){
-  if (!e.isTrusted){
-    alert('⚠️ Synthetic click detected (not a real user input).');
-    return;
-  }
-  if (!running){ running = true; clickBox.classList.remove('inactive'); }
-  const now = performance.now();
-  clicks.push(now);
-  while(clicks.length>0 && now - clicks[0] > 1000) clicks.shift();
-  const cps = clicks.length;
-  cpsDisplay.textContent = cps.toFixed(2);
-  spawnShock(e.clientX, e.clientY);
+  startIfNeeded();
+  if(!running) return;
+  const t = performance.now();
+  clicks.push(t);
+  totalClicks++;
+  // visual shock
+  const x = e && e.clientX ? e.clientX : (window.innerWidth/2);
+  const y = e && e.clientY ? e.clientY : (window.innerHeight/2);
+  spawnShock(x,y);
+  // immediate analyze for responsiveness
+  analyze();
 }
+
+clickBox.addEventListener('mousedown', onClick);
+clickBox.addEventListener('touchstart', (e)=>{ e.preventDefault(); onClick(e.touches ? e.touches[0] : e); });
+clickBox.addEventListener('keydown', (e)=>{ if(e.code==='Space' || e.code==='Enter'){ e.preventDefault(); onClick(e); } });
+
+// Reset / copy
+resetBtn.addEventListener('click', ()=>{
+  clicks = []; totalClicks = 0; sessionStart = null; running = false; suspicion = 0;
+  clickBox.classList.add('inactive');
+  updateDisplaysMinimal();
+  appendLog('Session reset by user.');
+  drawGraph([],[]);
+  verdictEl.textContent = 'Idle'; verdictEl.className = 'verdict small';
+  badge.innerText = 'Idle';
+  setAlert(false);
+});
+copyBtn.addEventListener('click', ()=>{
+  const summary = `REJOS CPS:${cpsDisplay.textContent} | Avg:${avgCpsEl.textContent || '0.00'} | Verdict:${verdictEl.textContent}`;
+  navigator.clipboard?.writeText(summary).then(()=> appendLog('Result copied to clipboard.'), ()=> appendLog('Copy failed.'));
+});
+
+/* periodic analyze to keep windows fresh even when clicks stop */
+setInterval(()=>{ if(running && clicks.length>0) analyze(); }, 180);
+
+/* persistence: decaying suspicion even when idle - keep watchdog feel */
+setInterval(()=>{
+  if(!running) return;
+  // small background decay for suspicion
+  suspicion = Math.max(0, suspicion - (SUSPICION_DECAY * 0.4));
+}, 700);
+
+/* initialize */
+appendLog('Ready. Click inside box to begin the test.');
+clickBox.classList.add('inactive');
+drawGraph([],[]);
+
 </script>
 </body>
 </html>
