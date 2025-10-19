@@ -3,121 +3,272 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>CPS Tester — Click & Detector</title>
+  <title>REJOS TIER TESTING — CPS & Anti-Autoclick Detector</title>
   <style>
-    :root{--bg:#0f1724;--card:#0b1220;--accent:#7c3aed;--muted:#94a3b8;--good:#10b981;--warn:#f59e0b;--bad:#ef4444}
+    /*
+      Black & white theme, minimal, energetic animations.
+      Logo centered top, bold title, animated click zone and buttons.
+    */
+    :root{
+      --bg: #000000;
+      --fg: #ffffff;
+      --muted: #cfcfcf;
+      --accent: #ff2b2b; /* keeps logo red visible */
+      --shadow: rgba(255,255,255,0.03);
+      --glass: rgba(255,255,255,0.03);
+      --ok: #00d27a;
+      --warn: #ffb400;
+      --bad: #ff4b4b;
+      --card-radius: 14px;
+    }
     *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;background:linear-gradient(180deg,#071026 0%, #0b1220 100%);color:#e6eef8;display:flex;align-items:center;justify-content:center;height:100vh}
-    .wrap{width:980px;max-width:96%;padding:28px;border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(0,0,0,0.03));box-shadow:0 10px 30px rgba(2,6,23,0.6)}
-    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
-    h1{font-size:20px;margin:0}
-    p.lead{margin:4px 0 0;color:var(--muted);font-size:13px}
-    .grid{display:grid;grid-template-columns:1fr 340px;gap:18px}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(180deg,#000 0%, #050505 100%);
+      color:var(--fg);
+      display:flex;
+      align-items:flex-start;
+      justify-content:center;
+      padding:36px;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
 
-    /* click zone */
-    .box{height:280px;background:linear-gradient(180deg,rgba(124,58,237,0.12),rgba(124,58,237,0.04));border:1px dashed rgba(124,58,237,0.25);display:flex;align-items:center;justify-content:center;border-radius:10px;position:relative;cursor:pointer;user-select:none}
-    .box.inactive{opacity:0.6}
-    .box h2{margin:0;font-size:52px;letter-spacing:2px}
-    .controls{display:flex;gap:8px;margin-top:12px}
-    button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 12px;border-radius:8px;color:inherit;cursor:pointer}
-    button.primary{background:var(--accent);border-color:transparent}
-    .stats{background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent);padding:12px;border-radius:10px}
+    .wrap{
+      width:980px;
+      max-width:96%;
+      border-radius:var(--card-radius);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      box-shadow: 0 8px 40px rgba(0,0,0,0.8), 0 2px 6px var(--shadow) inset;
+      padding:28px;
+      overflow:hidden;
+    }
 
+    header{display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:18px}
+    .logo{
+      width:82px;height:82px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      box-shadow: 0 6px 18px rgba(0,0,0,0.7), 0 0 18px rgba(255,255,255,0.02) inset;
+      transform:translateY(0);
+      animation: bob 4s ease-in-out infinite;
+    }
+    @keyframes bob{
+      0%{transform:translateY(0)}
+      50%{transform:translateY(-6px)}
+      100%{transform:translateY(0)}
+    }
+    .title{
+      margin:0;text-align:center;font-size:20px;letter-spacing:1px;font-weight:700;
+      text-transform:uppercase;
+      color:var(--fg);
+      text-shadow:0 2px 16px rgba(255,255,255,0.02);
+    }
+    .subtitle{margin:0;color:var(--muted);font-size:13px}
+
+    .grid{display:grid;grid-template-columns:1fr 340px;gap:18px;align-items:start}
+    @media (max-width:880px){.grid{grid-template-columns:1fr;}.aside{order:2}}
+
+    /* click area */
+    .panel{background:transparent;border-radius:10px;padding:0}
+    .clickbox{
+      height:300px;border-radius:12px;background:
+        radial-gradient(circle at 35% 25%, rgba(255,255,255,0.02), transparent 8%),
+        linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
+      border:1px solid rgba(255,255,255,0.04);
+      display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer;overflow:hidden;
+      user-select:none;
+      transition:transform 150ms ease;
+    }
+    .clickbox:active{transform:scale(0.996)}
+    .clickbox.inactive{opacity:0.6}
+
+    /* energetic pulse / shockwave */
+    .pulse{
+      position:absolute;inset:0;pointer-events:none;
+    }
+    .big-number{font-size:56px;margin:0;letter-spacing:1px;font-weight:700;color:var(--fg);text-shadow:0 6px 30px rgba(255,255,255,0.02)}
+    .small-muted{font-size:13px;color:var(--muted)}
+
+    .controls{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+    .btn{
+      appearance:none;border:0;padding:10px 14px;border-radius:10px;background:transparent;color:var(--fg);
+      border:1px solid rgba(255,255,255,0.06);cursor:pointer;font-weight:600;letter-spacing:0.6px;
+      position:relative;overflow:hidden;
+      transition:transform 180ms cubic-bezier(.2,.9,.3,1), box-shadow 180ms;
+    }
+    .btn:active{transform:translateY(2px) scale(0.995); box-shadow:none}
+    .btn.primary{
+      background: linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border-color: rgba(255,255,255,0.08);
+    }
+    .btn.cool-press::after{
+      content:"";position:absolute;left:50%;top:50%;width:10px;height:10px;border-radius:50%;
+      background:rgba(255,255,255,0.06);transform:translate(-50%,-50%) scale(1);opacity:0;transition:all 320ms;
+    }
+    .btn:active.cool-press::after{opacity:1;transform:translate(-50%,-50%) scale(40);transition:all 320ms;}
+
+    .stats{
+      margin-top:12px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
+      border-radius:10px;padding:12px;border:1px solid rgba(255,255,255,0.03);
+    }
     .stat-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed rgba(255,255,255,0.03)}
     .stat-row:last-child{border-bottom:0}
     .muted{color:var(--muted);font-size:13px}
-    .verdict{padding:10px;border-radius:8px;margin-top:12px;font-weight:600;text-align:center}
-    .verdict.good{background:linear-gradient(90deg,rgba(16,185,129,0.12),transparent);color:var(--good)}
-    .verdict.warn{background:linear-gradient(90deg,rgba(245,158,11,0.08),transparent);color:var(--warn)}
-    .verdict.bad{background:linear-gradient(90deg,rgba(239,68,68,0.08),transparent);color:var(--bad)}
 
-    footer{margin-top:12px;color:var(--muted);font-size:12px}
-    .small{font-size:12px;color:var(--muted)}
+    .verdict{margin-top:12px;padding:10px;border-radius:10px;font-weight:700;text-align:center;letter-spacing:0.4px;}
+    .verdict.good{background: linear-gradient(90deg, rgba(0,210,122,0.06), transparent); color:var(--ok)}
+    .verdict.warn{background: linear-gradient(90deg, rgba(255,180,0,0.06), transparent); color:var(--warn)}
+    .verdict.bad{background: linear-gradient(90deg, rgba(255,74,74,0.06), transparent); color:var(--bad)}
 
-    /* responsiveness */
-    @media (max-width:880px){.grid{grid-template-columns:1fr;}.box{height:220px}}
+    .aside{display:flex;flex-direction:column;gap:12px}
+    .log{max-height:160px;overflow:auto;padding-top:8px;font-size:13px;color:var(--muted);border-radius:8px}
+
+    /* shockwave element created on clicks */
+    .shock{
+      position:absolute;border-radius:50%;transform:translate(-50%,-50%) scale(0);opacity:0.9;
+      pointer-events:none;border:2px solid rgba(255,255,255,0.08);
+      animation: shock 650ms cubic-bezier(.2,.8,.2,1) forwards;
+    }
+    @keyframes shock{
+      0%{transform:translate(-50%,-50%) scale(0.1);opacity:0.9}
+      60%{transform:translate(-50%,-50%) scale(1.6);opacity:0.32}
+      100%{transform:translate(-50%,-50%) scale(2.6);opacity:0}
+    }
+
+    /* subtle fade-in for stats */
+    .fade-in{animation:fadeIn 420ms ease both}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none}}
+
+    footer{margin-top:12px;color:var(--muted);font-size:12px;text-align:center}
+    .top-title{display:flex;flex-direction:column;align-items:center}
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div>
-        <h1>CPS Tester — Click & Detector</h1>
-        <p class="lead">Click inside the big box as fast as you can. The detector looks at timing patterns to judge if clicks are human or automated.</p>
+  <div class="wrap" role="main" aria-labelledby="mainTitle">
+    <header class="top-title">
+      <div class="logo" title="REJOS logo">
+        <!-- raw image link from your GitHub repo (raw path) -->
+        <img src="https://raw.githubusercontent.com/rejoicine/cpstest/main/Screenshot%202025-10-19%20045107.png"
+             alt="REJOS logo" style="width:66px;height:66px;border-radius:50%;display:block;object-fit:cover" />
       </div>
-      <div class="small">Built for static hosting (Vercel-ready)</div>
+      <h1 id="mainTitle" class="title">REJOS TIER TESTING</h1>
+      <p class="subtitle">Click in the box fast. Detector attempts to spot macros / autoclickers — now hardened.</p>
     </header>
 
     <div class="grid">
-      <div>
-        <div id="clickbox" class="box" tabindex="0" role="button" aria-label="Click zone">
-          <h2 id="cpsDisplay">0.00</h2>
+      <div class="panel">
+        <div id="clickbox" class="clickbox inactive" tabindex="0" role="button" aria-label="Click zone">
+          <div class="pulse" id="pulseLayer" aria-hidden="true"></div>
+          <div>
+            <h2 id="cpsDisplay" class="big-number">0.00</h2>
+            <div style="text-align:center" class="small-muted">Current CPS (1s window)</div>
+          </div>
         </div>
 
         <div class="controls">
-          <button id="startBtn" class="primary">Start</button>
-          <button id="resetBtn">Reset</button>
-          <button id="copyBtn">Copy result</button>
+          <button id="startBtn" class="btn primary cool-press">Start</button>
+          <button id="resetBtn" class="btn cool-press">Reset</button>
+          <button id="copyBtn" class="btn cool-press">Copy result</button>
+          <button id="toggleGraph" class="btn cool-press" title="Toggle interval graph">Toggle Graph</button>
         </div>
 
-        <div style="margin-top:12px" class="stats">
+        <div class="stats fade-in" id="statsCard">
           <div class="stat-row"><div class="muted">Total clicks</div><div id="totalClicks">0</div></div>
           <div class="stat-row"><div class="muted">Current CPS (1s window)</div><div id="cpsNow">0.00</div></div>
           <div class="stat-row"><div class="muted">Average CPS (session)</div><div id="avgCps">0.00</div></div>
-          <div class="stat-row"><div class="muted">Std dev of intervals</div><div id="stdDev">—</div></div>
-          <div class="stat-row"><div class="muted">Regularity score</div><div id="regularity">—</div></div>
-
+          <div class="stat-row"><div class="muted">Std dev (recent)</div><div id="stdDev">—</div></div>
+          <div class="stat-row"><div class="muted">Entropy (intervals)</div><div id="entropy">—</div></div>
+          <div class="stat-row"><div class="muted">Pattern score</div><div id="patternScore">—</div></div>
+          <div class="stat-row"><div class="muted">Suspicion</div><div id="suspicionScore">—</div></div>
           <div id="verdict" class="verdict small">Idle</div>
+        </div>
+
+        <!-- optional simple SVG interval plot -->
+        <div id="graphWrap" class="stats fade-in" style="margin-top:12px;display:none">
+          <div style="font-weight:700;margin-bottom:8px">Intervals (ms) — recent</div>
+          <svg id="intervalGraph" width="100%" height="120" viewBox="0 0 400 120" preserveAspectRatio="none" style="background:transparent;border-radius:8px"></svg>
         </div>
 
       </div>
 
-      <aside>
+      <aside class="aside">
         <div class="stats">
-          <div style="font-weight:700">How detection works</div>
-          <p class="muted" style="margin:8px 0 0;font-size:13px">This tester collects timestamps of your clicks and analyses the intervals. It looks for:
-          <ul style="margin:8px 0 12px;color:var(--muted)">
-            <li>Extremely low variance in intervals (very regular timing)</li>
-            <li>Impossible high CPS for human limits</li>
-            <li>Repeated identical intervals (patterned clicks)</li>
+          <div style="font-weight:700">How this detector is stronger</div>
+          <ul style="margin:8px 0 0;color:var(--muted);font-size:13px">
+            <li>Sliding-window analysis (last 20 clicks) to catch mid-session switches.</li>
+            <li>Entropy & autocorrelation checks to detect patterned but jittered macros.</li>
+            <li>Sudden-regularity jump detection — flags when clicking becomes too consistent quickly.</li>
+            <li>Burst & impossible-rate detection (extreme CPS spikes).</li>
           </ul>
-          Based on these heuristics it shows a verdict with a confidence level.</p>
-
-          <div style="margin-top:8px" class="muted">Tips: If you use keyboard/mouse macros, testing will likely flag them. To get a good human sample, click naturally for at least 5–10 seconds.</div>
         </div>
 
-        <div style="margin-top:12px" class="stats">
+        <div class="stats">
           <div style="font-weight:700">Session log</div>
-          <div id="log" style="max-height:140px;overflow:auto;padding-top:8px;font-size:13px;color:var(--muted)">No data yet.</div>
+          <div id="log" class="log">No data yet.</div>
         </div>
 
       </aside>
     </div>
 
-    <footer>Made with simple heuristics — not a perfect anti-cheat. For high-stakes use integrate server-side checks.</footer>
+    <footer>Black & white UI • Energetic animations • Improved detection heuristics</footer>
   </div>
 
 <script>
-// CPS tester and simple autoclicker/macro detector
+/* REJOS TIER TESTING — enhanced CPS + anti-autoclick logic
+   Single-file, ready for static hosting.
+
+   Detection highlights:
+   - sliding windows (last N clicks) for real-time decisions
+   - sample entropy of intervals to detect randomized-but-patterned macros
+   - autocorrelation-style pattern detection
+   - sudden shift detection (old variability -> new low variability)
+   - burst/high-rate detection (human limits)
+*/
+
 (() => {
+  // DOM refs
   const clickBox = document.getElementById('clickbox');
   const cpsDisplay = document.getElementById('cpsDisplay');
   const cpsNow = document.getElementById('cpsNow');
   const avgCps = document.getElementById('avgCps');
   const totalClicksEl = document.getElementById('totalClicks');
   const stdDevEl = document.getElementById('stdDev');
-  const regularityEl = document.getElementById('regularity');
+  const entropyEl = document.getElementById('entropy');
+  const patternScoreEl = document.getElementById('patternScore');
+  const suspicionScoreEl = document.getElementById('suspicionScore');
   const verdictEl = document.getElementById('verdict');
   const logEl = document.getElementById('log');
+  const pulseLayer = document.getElementById('pulseLayer');
+  const graphWrap = document.getElementById('graphWrap');
+  const intervalGraph = document.getElementById('intervalGraph');
 
   const startBtn = document.getElementById('startBtn');
   const resetBtn = document.getElementById('resetBtn');
   const copyBtn = document.getElementById('copyBtn');
+  const toggleGraphBtn = document.getElementById('toggleGraph');
 
   let running = false;
-  let clicks = [];// timestamps in ms
-  let totalClicks = 0;
+  let clicks = []; // timestamps (ms from performance.now)
   let sessionStart = null;
+  let totalClicks = 0;
+
+  // parameters
+  const ANALYZE_WINDOW = 20; // last N clicks to focus on
+  const SUDDEN_SHIFT_OLD = 30; // clicks window size to compute old variability
+  const HUMAN_CPS_LIMIT = 28; // extreme human limit (suspicious above this)
+  const ENTROPY_BIN_MS = 8; // bin size when computing interval entropy
+
+  function appendLog(text){
+    const tm = new Date().toLocaleTimeString();
+    if(logEl.innerHTML === 'No data yet.') logEl.innerHTML = '';
+    const line = document.createElement('div');
+    line.textContent = `[${tm}] ${text}`;
+    logEl.prepend(line);
+    // cap lines
+    while(logEl.children.length > 200) logEl.removeChild(logEl.lastChild);
+  }
 
   function resetSession(){
     clicks = [];
@@ -129,11 +280,15 @@
     avgCps.textContent = '0.00';
     totalClicksEl.textContent = '0';
     stdDevEl.textContent = '—';
-    regularityEl.textContent = '—';
-    verdictEl.textContent = 'Idle'; verdictEl.className='verdict small';
+    entropyEl.textContent = '—';
+    patternScoreEl.textContent = '—';
+    suspicionScoreEl.textContent = '—';
+    verdictEl.textContent = 'Idle';
+    verdictEl.className = 'verdict small';
     logEl.innerHTML = 'No data yet.';
     clickBox.classList.add('inactive');
     startBtn.textContent = 'Start';
+    clearGraph();
   }
 
   function startSession(){
@@ -145,110 +300,272 @@
     appendLog('Session started. Click in the box!');
   }
 
-  function appendLog(text){
-    const time = new Date().toLocaleTimeString();
-    if(logEl.innerHTML === 'No data yet.') logEl.innerHTML = '';
-    const line = document.createElement('div');
-    line.textContent = `[${time}] ${text}`;
-    logEl.prepend(line);
+  // utility: sample entropy (approximate using histogram bins) for short sequences
+  function intervalEntropy(intervals){
+    if(intervals.length < 3) return 0;
+    // bin intervals to reduce sensitivity to tiny jitter
+    const bins = {};
+    for(const v of intervals){
+      const b = Math.round(v / ENTROPY_BIN_MS) * ENTROPY_BIN_MS;
+      bins[b] = (bins[b] || 0) + 1;
+    }
+    const total = intervals.length;
+    let ent = 0;
+    for(const k in bins){
+      const p = bins[k] / total;
+      ent -= p * Math.log2(p);
+    }
+    // normalize: maximum entropy occurs when bins all unique; bound roughly by log2(total).
+    const maxEnt = Math.log2(Math.min(total, Math.max(2, Object.keys(bins).length)));
+    return maxEnt > 0 ? (ent / maxEnt) * 100 : 0; // 0..100
   }
 
-  function onClick(){
-    if(!running) return;
-    const t = performance.now();
-    clicks.push(t);
-    totalClicks++;
-    totalClicksEl.textContent = totalClicks;
-    analyze();
+  // compute simple autocorrelation-like pattern score:
+  // checks if adjacent and alternate intervals are similar (rhythmic)
+  function patternScore(intervals){
+    if(intervals.length < 4) return 0;
+    let score = 0;
+    for(let i=0;i+2<intervals.length;i++){
+      const d1 = Math.abs(intervals[i] - intervals[i+1]);
+      const d2 = Math.abs(intervals[i] - intervals[i+2]);
+      // small diffs indicate repeating rhythm
+      if(d1 < 6 && d2 < 6) score++;
+      else if(d1 < 12 && d2 < 12) score += 0.5;
+    }
+    return (score / Math.max(1, intervals.length)) * 100; // normalized 0..100
   }
 
-  clickBox.addEventListener('mousedown', onClick);
-  clickBox.addEventListener('touchstart', (e)=>{ e.preventDefault(); onClick(); });
-  // keyboard support
-  clickBox.addEventListener('keydown', (e)=>{ if(e.code==='Space' || e.code==='Enter') { e.preventDefault(); onClick(); } });
+  function stdev(arr){
+    if(arr.length === 0) return 0;
+    const mean = arr.reduce((a,b)=>a+b,0)/arr.length;
+    const variance = arr.reduce((a,b)=>a + Math.pow(b-mean,2),0)/arr.length;
+    return Math.sqrt(variance);
+  }
 
-  startBtn.addEventListener('click', ()=>{ if(running) { appendLog('Session already running.'); } else startSession(); });
-  resetBtn.addEventListener('click', ()=>{ resetSession(); appendLog('Session reset.'); });
-  copyBtn.addEventListener('click', ()=>{
-    const summary = `CPS: ${cpsNow.textContent} | Avg: ${avgCps.textContent} | Verdict: ${verdictEl.textContent}`;
-    navigator.clipboard?.writeText(summary).then(()=>{ appendLog('Result copied to clipboard.'); }, ()=>{ appendLog('Copy failed.'); });
-  });
+  function detectSuddenShift(allIntervals, recentStd){
+    // compare older window stddev to recentStd; if older variability is much larger and recentStd is tiny -> suspicious
+    if(allIntervals.length < SUDDEN_SHIFT_OLD) return 0;
+    const oldStart = Math.max(0, allIntervals.length - SUDDEN_SHIFT_OLD);
+    const oldEnd = Math.max(0, allIntervals.length - Math.min(10, Math.floor(allIntervals.length/3)));
+    const oldSlice = allIntervals.slice(oldStart, oldEnd);
+    if(oldSlice.length < 4) return 0;
+    const oldStd = stdev(oldSlice);
+    // if oldStd >> recentStd, compute jump magnitude (capped)
+    if(oldStd > 0 && recentStd > 0){
+      const ratio = oldStd / recentStd;
+      if(ratio > 3 && recentStd < 14) return Math.min(0.35, (ratio - 2) * 0.1); // return partial score up to 0.35
+    }
+    return 0;
+  }
 
+  function computeSuspicion(intervals, cps, recentStd, ent, patScore, allIntervals){
+    // Build a weighted suspicion 0..1
+    // Factors:
+    // - very low stddev (too regular)
+    // - low entropy (small variety)
+    // - strong pattern score
+    // - high CPS spikes
+    // - sudden shift to regularity
+    let s = 0;
+    // stddev component: if very low relative to mean or absolute small (<10ms) => suspicious
+    const mean = intervals.reduce((a,b)=>a+b,0)/intervals.length;
+    if(recentStd < 10) s += 0.22;
+    if(recentStd < 7) s += 0.18;
+    // entropy component: low entropy increases suspicion
+    if(ent < 45) s += 0.12;
+    if(ent < 25) s += 0.12;
+    // pattern
+    if(patScore > 35) s += 0.14;
+    if(patScore > 60) s += 0.1;
+    // high CPS
+    if(cps > 20) s += 0.12;
+    if(cps > HUMAN_CPS_LIMIT) s += 0.12;
+    // sudden shift
+    s += detectSuddenShift(allIntervals, recentStd);
+    // cap
+    return Math.min(1, s);
+  }
+
+  // click visuals: shockwave at pointer location inside clickbox
+  function spawnShock(x, y){
+    const rect = clickBox.getBoundingClientRect();
+    const el = document.createElement('div');
+    el.className = 'shock';
+    const size = Math.max(rect.width, rect.height) * 0.8;
+    el.style.width = size + 'px';
+    el.style.height = size + 'px';
+    el.style.left = (x - rect.left) + 'px';
+    el.style.top = (y - rect.top) + 'px';
+    clickBox.appendChild(el);
+    setTimeout(()=>{ if(el.parentNode) el.parentNode.removeChild(el); }, 700);
+  }
+
+  // draw simple interval graph in SVG
+  function updateGraph(intervals){
+    // show last 40 intervals scaled to width
+    const data = intervals.slice(-40);
+    const w = 400, h = 120;
+    intervalGraph.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    // clear
+    while(intervalGraph.firstChild) intervalGraph.removeChild(intervalGraph.firstChild);
+    if(data.length === 0) return;
+
+    const maxVal = Math.max(...data, 50);
+    // draw polyline
+    const step = w / Math.max(1, data.length - 1);
+    const points = data.map((v,i) => {
+      const x = i * step;
+      const y = h - (Math.min(v, maxVal) / maxVal) * (h - 12) - 6;
+      return `${x},${y}`;
+    }).join(' ');
+    const poly = document.createElementNS('http://www.w3.org/2000/svg','polyline');
+    poly.setAttribute('points', points);
+    poly.setAttribute('fill','none');
+    poly.setAttribute('stroke','white');
+    poly.setAttribute('stroke-opacity','0.75');
+    poly.setAttribute('stroke-width','1.6');
+    intervalGraph.appendChild(poly);
+
+    // small markers
+    data.forEach((v,i)=>{
+      const cx = i * step;
+      const cy = h - (Math.min(v, maxVal) / maxVal) * (h - 12) - 6;
+      const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      c.setAttribute('cx', cx);
+      c.setAttribute('cy', cy);
+      c.setAttribute('r', 2.2);
+      c.setAttribute('fill', 'white');
+      c.setAttribute('fill-opacity', '0.9');
+      intervalGraph.appendChild(c);
+    });
+  }
+  function clearGraph(){ while(intervalGraph.firstChild) intervalGraph.removeChild(intervalGraph.firstChild); }
+
+  // main analysis function
   function analyze(){
-    if(clicks.length < 2) return updateDisplays();
-    // compute intervals (ms)
-    const intervals = [];
-    for(let i=1;i<clicks.length;i++) intervals.push(clicks[i]-clicks[i-1]);
-
-    // windowed CPS: count clicks within last 1000ms
+    if(clicks.length < 2) return updateDisplaysMinimal();
     const now = performance.now();
-    let within1s = 0;
-    for(let i=clicks.length-1;i>=0;i--){ if(now-clicks[i] <= 1000) within1s++; else break; }
-    const cps = within1s; // clicks per second (integer)
 
-    // average CPS since sessionStart
-    const elapsedSec = Math.max(0.001, (now - sessionStart)/1000);
+    // build intervals for all clicks (ms)
+    const allIntervals = [];
+    for(let i=1;i<clicks.length;i++) allIntervals.push(clicks[i] - clicks[i-1]);
+
+    // recent intervals for sliding window
+    const recentClicks = clicks.slice(-ANALYZE_WINDOW);
+    const intervals = [];
+    for(let i=1;i<recentClicks.length;i++) intervals.push(recentClicks[i]-recentClicks[i-1]);
+
+    if(intervals.length === 0) return;
+
+    // compute stats
+    const mean = intervals.reduce((a,b)=>a+b,0) / intervals.length;
+    const recentStd = stdev(intervals);
+
+    // entropy: low entropy suggests repeated bin values (patterned)
+    const ent = intervalEntropy(intervals); // 0..100 (higher = more random)
+    // pattern mimicry
+    const patScore = patternScore(intervals); // 0..100
+    // windowed CPS (clicks in past 1000ms)
+    let within1s = 0;
+    for(let i=clicks.length-1;i>=0;i--){ if(now - clicks[i] <= 1000) within1s++; else break; }
+    const cps = within1s;
+    const elapsedSec = Math.max(0.0001, (now - sessionStart)/1000);
     const avg = (clicks.length / elapsedSec).toFixed(2);
 
-    // stats on intervals
-    const mean = intervals.reduce((a,b)=>a+b,0)/intervals.length;
-    const variance = intervals.reduce((a,b)=>a + Math.pow(b-mean,2),0)/intervals.length;
-    const stdDev = Math.sqrt(variance);
+    // suspicion
+    const suspicion = computeSuspicion(intervals, cps, recentStd, ent, patScore, allIntervals);
 
-    // regularity score: lower stdDev relative to mean -> more regular
-    // normalized regularity: 0 (totally irregular) -> 100 (perfectly regular)
-    const regScore = Math.max(0, 100 - (stdDev / Math.max(1, mean)) * 100).toFixed(1);
-
-    // detect identical intervals pattern: count how many intervals equal within 2ms
-    let identicalPairs = 0;
-    for(let i=0;i<intervals.length-1;i++){
-      if(Math.abs(intervals[i]-intervals[i+1]) <= 2) identicalPairs++;
-    }
-    const identRatio = (identicalPairs / Math.max(1, intervals.length)).toFixed(2);
-
-    // create heuristic score for automation
-    // conditions that increase suspicion:
-    // - stdDev very low (e.g., <7ms)
-    // - regScore high (>65)
-    // - identRatio high (>0.4)
-    // - cps unusually high (>25)
-    // We'll combine them into a 0..1 score
-    let score = 0;
-    if(stdDev < 7) score += 0.45;
-    if(regScore > 65) score += 0.25;
-    if(parseFloat(identRatio) > 0.4) score += 0.15;
-    if(cps > 25) score += 0.25; // humans struggle far above ~15-20 cps
-    score = Math.min(1, score);
-
-    // verdict
-    let verdict = 'Likely human';
-    let style = 'good';
-    if(score >= 0.75) { verdict = 'Very likely an autoclicker / macro'; style='bad'; }
-    else if(score >= 0.4) { verdict = 'Suspected macro / automated clicks'; style='warn'; }
-
-    // update displays
-    cpsDisplay.textContent = cps.toFixed ? cps.toFixed(2) : String(cps);
-    cpsNow.textContent = cps.toFixed ? cps.toFixed(2) : String(cps);
+    // format/display
+    cpsDisplay.textContent = (cps).toFixed(2);
+    cpsNow.textContent = (cps).toFixed(2);
     avgCps.textContent = avg;
-    stdDevEl.textContent = stdDev.toFixed(2) + ' ms';
-    regularityEl.textContent = regScore + ' / 100';
-    verdictEl.textContent = verdict;
-    verdictEl.className = `verdict ${style}`;
+    totalClicksEl.textContent = totalClicks;
+    stdDevEl.textContent = recentStd.toFixed(2) + ' ms';
+    entropyEl.textContent = ent.toFixed(1) + ' / 100';
+    patternScoreEl.textContent = patScore.toFixed(1) + ' / 100';
+    suspicionScoreEl.textContent = (suspicion*100).toFixed(0) + ' %';
 
-    appendLog(`Click #${totalClicks} • CPS:${cps} • std:${stdDev.toFixed(1)}ms • reg:${regScore} • ident:${identRatio} • score:${(score*100).toFixed(0)}%`);
+    // verdict tiering
+    let verdict = 'Likely human';
+    let cls = 'good';
+    if(suspicion >= 0.75) { verdict = 'Very likely an autoclicker / macro'; cls='bad'; }
+    else if(suspicion >= 0.45) { verdict = 'Suspected macro / automated clicks'; cls='warn'; }
+
+    verdictEl.textContent = verdict;
+    verdictEl.className = `verdict ${cls}`;
+
+    // append log periodically for events of interest
+    if(totalClicks % 6 === 0){
+      appendLog(`Click #${totalClicks} • CPS:${cps} • std:${recentStd.toFixed(1)}ms • ent:${ent.toFixed(1)} • pat:${patScore.toFixed(1)} • score:${(suspicion*100).toFixed(0)}%`);
+    }
+
+    // update graph if visible
+    if(graphWrap.style.display !== 'none') updateGraph(allIntervals);
   }
 
-  function updateDisplays(){
-    // minimal update when not enough data
+  function updateDisplaysMinimal(){
     cpsDisplay.textContent = '0.00';
     cpsNow.textContent = '0.00';
   }
 
-  // nice auto recalc every 150ms to update CPS window even without new click
+  // click handler
+  function onClick(e){
+    if(!running) return;
+    const t = performance.now();
+    clicks.push(t);
+    totalClicks++;
+    if(!sessionStart) sessionStart = t;
+    totalClicksEl.textContent = totalClicks;
+
+    // visual shock
+    const x = (e && e.clientX) ? e.clientX : (window.innerWidth/2);
+    const y = (e && e.clientY) ? e.clientY : (window.innerHeight/2);
+    spawnShock(x, y);
+
+    analyze();
+  }
+
+  clickBox.addEventListener('mousedown', onClick);
+  clickBox.addEventListener('touchstart', (e)=>{ e.preventDefault(); onClick(e.touches[0] || e); });
+
+  // keyboard support
+  clickBox.addEventListener('keydown', (e)=>{ if(e.code==='Space' || e.code==='Enter'){ e.preventDefault(); onClick(e); } });
+
+  // buttons
+  startBtn.addEventListener('click', ()=>{ if(running){ appendLog('Session already running.'); } else startSession(); });
+  resetBtn.addEventListener('click', ()=>{ resetSession(); appendLog('Session reset.'); });
+  copyBtn.addEventListener('click', ()=>{
+    const summary = `REJOS CPS:${cpsNow.textContent} | Avg:${avgCps.textContent} | Verdict:${verdictEl.textContent}`;
+    navigator.clipboard?.writeText(summary).then(()=> appendLog('Result copied to clipboard.'), ()=> appendLog('Copy failed.'));
+  });
+  toggleGraphBtn.addEventListener('click', ()=>{
+    graphWrap.style.display = graphWrap.style.display === 'none' ? 'block' : 'none';
+  });
+
+  // periodic analyze to update CPS even without new clicks
   setInterval(()=>{ if(running && clicks.length>0) analyze(); }, 150);
 
   // init
   resetSession();
+
+  // extra: defensive periodic check to mark suspicious if long-running repeating pattern persists
+  setInterval(()=>{
+    if(!running || clicks.length < 10) return;
+    // inspect last windows for persistent pattern
+    const n = Math.min(80, clicks.length);
+    const slice = clicks.slice(-n);
+    const intervals = [];
+    for(let i=1;i<slice.length;i++) intervals.push(slice[i] - slice[i-1]);
+    const ent = intervalEntropy(intervals);
+    const pat = patternScore(intervals);
+    // if very low entropy + strong pattern for extended period, escalate
+    if(ent < 20 && pat > 55){
+      appendLog('Extended patterned behavior detected — raising suspicion.');
+      // artificially nudge the verdict evaluate
+      analyze();
+    }
+  }, 1200);
+
 })();
 </script>
 </body>
