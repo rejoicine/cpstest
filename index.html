@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>CPS Tester — Click & Detector</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#7c3aed;--muted:#94a3b8;--good:#10b981;--warn:#f59e0b;--bad:#ef4444}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;background:linear-gradient(180deg,#071026 0%, #0b1220 100%);color:#e6eef8;display:flex;align-items:center;justify-content:center;height:100vh}
+    .wrap{width:980px;max-width:96%;padding:28px;border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(0,0,0,0.03));box-shadow:0 10px 30px rgba(2,6,23,0.6)}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+    h1{font-size:20px;margin:0}
+    p.lead{margin:4px 0 0;color:var(--muted);font-size:13px}
+    .grid{display:grid;grid-template-columns:1fr 340px;gap:18px}
+
+    /* click zone */
+    .box{height:280px;background:linear-gradient(180deg,rgba(124,58,237,0.12),rgba(124,58,237,0.04));border:1px dashed rgba(124,58,237,0.25);display:flex;align-items:center;justify-content:center;border-radius:10px;position:relative;cursor:pointer;user-select:none}
+    .box.inactive{opacity:0.6}
+    .box h2{margin:0;font-size:52px;letter-spacing:2px}
+    .controls{display:flex;gap:8px;margin-top:12px}
+    button{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 12px;border-radius:8px;color:inherit;cursor:pointer}
+    button.primary{background:var(--accent);border-color:transparent}
+    .stats{background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent);padding:12px;border-radius:10px}
+
+    .stat-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed rgba(255,255,255,0.03)}
+    .stat-row:last-child{border-bottom:0}
+    .muted{color:var(--muted);font-size:13px}
+    .verdict{padding:10px;border-radius:8px;margin-top:12px;font-weight:600;text-align:center}
+    .verdict.good{background:linear-gradient(90deg,rgba(16,185,129,0.12),transparent);color:var(--good)}
+    .verdict.warn{background:linear-gradient(90deg,rgba(245,158,11,0.08),transparent);color:var(--warn)}
+    .verdict.bad{background:linear-gradient(90deg,rgba(239,68,68,0.08),transparent);color:var(--bad)}
+
+    footer{margin-top:12px;color:var(--muted);font-size:12px}
+    .small{font-size:12px;color:var(--muted)}
+
+    /* responsiveness */
+    @media (max-width:880px){.grid{grid-template-columns:1fr;}.box{height:220px}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>CPS Tester — Click & Detector</h1>
+        <p class="lead">Click inside the big box as fast as you can. The detector looks at timing patterns to judge if clicks are human or automated.</p>
+      </div>
+      <div class="small">Built for static hosting (Vercel-ready)</div>
+    </header>
+
+    <div class="grid">
+      <div>
+        <div id="clickbox" class="box" tabindex="0" role="button" aria-label="Click zone">
+          <h2 id="cpsDisplay">0.00</h2>
+        </div>
+
+        <div class="controls">
+          <button id="startBtn" class="primary">Start</button>
+          <button id="resetBtn">Reset</button>
+          <button id="copyBtn">Copy result</button>
+        </div>
+
+        <div style="margin-top:12px" class="stats">
+          <div class="stat-row"><div class="muted">Total clicks</div><div id="totalClicks">0</div></div>
+          <div class="stat-row"><div class="muted">Current CPS (1s window)</div><div id="cpsNow">0.00</div></div>
+          <div class="stat-row"><div class="muted">Average CPS (session)</div><div id="avgCps">0.00</div></div>
+          <div class="stat-row"><div class="muted">Std dev of intervals</div><div id="stdDev">—</div></div>
+          <div class="stat-row"><div class="muted">Regularity score</div><div id="regularity">—</div></div>
+
+          <div id="verdict" class="verdict small">Idle</div>
+        </div>
+
+      </div>
+
+      <aside>
+        <div class="stats">
+          <div style="font-weight:700">How detection works</div>
+          <p class="muted" style="margin:8px 0 0;font-size:13px">This tester collects timestamps of your clicks and analyses the intervals. It looks for:
+          <ul style="margin:8px 0 12px;color:var(--muted)">
+            <li>Extremely low variance in intervals (very regular timing)</li>
+            <li>Impossible high CPS for human limits</li>
+            <li>Repeated identical intervals (patterned clicks)</li>
+          </ul>
+          Based on these heuristics it shows a verdict with a confidence level.</p>
+
+          <div style="margin-top:8px" class="muted">Tips: If you use keyboard/mouse macros, testing will likely flag them. To get a good human sample, click naturally for at least 5–10 seconds.</div>
+        </div>
+
+        <div style="margin-top:12px" class="stats">
+          <div style="font-weight:700">Session log</div>
+          <div id="log" style="max-height:140px;overflow:auto;padding-top:8px;font-size:13px;color:var(--muted)">No data yet.</div>
+        </div>
+
+      </aside>
+    </div>
+
+    <footer>Made with simple heuristics — not a perfect anti-cheat. For high-stakes use integrate server-side checks.</footer>
+  </div>
+
+<script>
+// CPS tester and simple autoclicker/macro detector
+(() => {
+  const clickBox = document.getElementById('clickbox');
+  const cpsDisplay = document.getElementById('cpsDisplay');
+  const cpsNow = document.getElementById('cpsNow');
+  const avgCps = document.getElementById('avgCps');
+  const totalClicksEl = document.getElementById('totalClicks');
+  const stdDevEl = document.getElementById('stdDev');
+  const regularityEl = document.getElementById('regularity');
+  const verdictEl = document.getElementById('verdict');
+  const logEl = document.getElementById('log');
+
+  const startBtn = document.getElementById('startBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const copyBtn = document.getElementById('copyBtn');
+
+  let running = false;
+  let clicks = [];// timestamps in ms
+  let totalClicks = 0;
+  let sessionStart = null;
+
+  function resetSession(){
+    clicks = [];
+    totalClicks = 0;
+    sessionStart = null;
+    running = false;
+    cpsDisplay.textContent = '0.00';
+    cpsNow.textContent = '0.00';
+    avgCps.textContent = '0.00';
+    totalClicksEl.textContent = '0';
+    stdDevEl.textContent = '—';
+    regularityEl.textContent = '—';
+    verdictEl.textContent = 'Idle'; verdictEl.className='verdict small';
+    logEl.innerHTML = 'No data yet.';
+    clickBox.classList.add('inactive');
+    startBtn.textContent = 'Start';
+  }
+
+  function startSession(){
+    resetSession();
+    running = true;
+    sessionStart = performance.now();
+    clickBox.classList.remove('inactive');
+    startBtn.textContent = 'Running';
+    appendLog('Session started. Click in the box!');
+  }
+
+  function appendLog(text){
+    const time = new Date().toLocaleTimeString();
+    if(logEl.innerHTML === 'No data yet.') logEl.innerHTML = '';
+    const line = document.createElement('div');
+    line.textContent = `[${time}] ${text}`;
+    logEl.prepend(line);
+  }
+
+  function onClick(){
+    if(!running) return;
+    const t = performance.now();
+    clicks.push(t);
+    totalClicks++;
+    totalClicksEl.textContent = totalClicks;
+    analyze();
+  }
+
+  clickBox.addEventListener('mousedown', onClick);
+  clickBox.addEventListener('touchstart', (e)=>{ e.preventDefault(); onClick(); });
+  // keyboard support
+  clickBox.addEventListener('keydown', (e)=>{ if(e.code==='Space' || e.code==='Enter') { e.preventDefault(); onClick(); } });
+
+  startBtn.addEventListener('click', ()=>{ if(running) { appendLog('Session already running.'); } else startSession(); });
+  resetBtn.addEventListener('click', ()=>{ resetSession(); appendLog('Session reset.'); });
+  copyBtn.addEventListener('click', ()=>{
+    const summary = `CPS: ${cpsNow.textContent} | Avg: ${avgCps.textContent} | Verdict: ${verdictEl.textContent}`;
+    navigator.clipboard?.writeText(summary).then(()=>{ appendLog('Result copied to clipboard.'); }, ()=>{ appendLog('Copy failed.'); });
+  });
+
+  function analyze(){
+    if(clicks.length < 2) return updateDisplays();
+    // compute intervals (ms)
+    const intervals = [];
+    for(let i=1;i<clicks.length;i++) intervals.push(clicks[i]-clicks[i-1]);
+
+    // windowed CPS: count clicks within last 1000ms
+    const now = performance.now();
+    let within1s = 0;
+    for(let i=clicks.length-1;i>=0;i--){ if(now-clicks[i] <= 1000) within1s++; else break; }
+    const cps = within1s; // clicks per second (integer)
+
+    // average CPS since sessionStart
+    const elapsedSec = Math.max(0.001, (now - sessionStart)/1000);
+    const avg = (clicks.length / elapsedSec).toFixed(2);
+
+    // stats on intervals
+    const mean = intervals.reduce((a,b)=>a+b,0)/intervals.length;
+    const variance = intervals.reduce((a,b)=>a + Math.pow(b-mean,2),0)/intervals.length;
+    const stdDev = Math.sqrt(variance);
+
+    // regularity score: lower stdDev relative to mean -> more regular
+    // normalized regularity: 0 (totally irregular) -> 100 (perfectly regular)
+    const regScore = Math.max(0, 100 - (stdDev / Math.max(1, mean)) * 100).toFixed(1);
+
+    // detect identical intervals pattern: count how many intervals equal within 2ms
+    let identicalPairs = 0;
+    for(let i=0;i<intervals.length-1;i++){
+      if(Math.abs(intervals[i]-intervals[i+1]) <= 2) identicalPairs++;
+    }
+    const identRatio = (identicalPairs / Math.max(1, intervals.length)).toFixed(2);
+
+    // create heuristic score for automation
+    // conditions that increase suspicion:
+    // - stdDev very low (e.g., <7ms)
+    // - regScore high (>65)
+    // - identRatio high (>0.4)
+    // - cps unusually high (>25)
+    // We'll combine them into a 0..1 score
+    let score = 0;
+    if(stdDev < 7) score += 0.45;
+    if(regScore > 65) score += 0.25;
+    if(parseFloat(identRatio) > 0.4) score += 0.15;
+    if(cps > 25) score += 0.25; // humans struggle far above ~15-20 cps
+    score = Math.min(1, score);
+
+    // verdict
+    let verdict = 'Likely human';
+    let style = 'good';
+    if(score >= 0.75) { verdict = 'Very likely an autoclicker / macro'; style='bad'; }
+    else if(score >= 0.4) { verdict = 'Suspected macro / automated clicks'; style='warn'; }
+
+    // update displays
+    cpsDisplay.textContent = cps.toFixed ? cps.toFixed(2) : String(cps);
+    cpsNow.textContent = cps.toFixed ? cps.toFixed(2) : String(cps);
+    avgCps.textContent = avg;
+    stdDevEl.textContent = stdDev.toFixed(2) + ' ms';
+    regularityEl.textContent = regScore + ' / 100';
+    verdictEl.textContent = verdict;
+    verdictEl.className = `verdict ${style}`;
+
+    appendLog(`Click #${totalClicks} • CPS:${cps} • std:${stdDev.toFixed(1)}ms • reg:${regScore} • ident:${identRatio} • score:${(score*100).toFixed(0)}%`);
+  }
+
+  function updateDisplays(){
+    // minimal update when not enough data
+    cpsDisplay.textContent = '0.00';
+    cpsNow.textContent = '0.00';
+  }
+
+  // nice auto recalc every 150ms to update CPS window even without new click
+  setInterval(()=>{ if(running && clicks.length>0) analyze(); }, 150);
+
+  // init
+  resetSession();
+})();
+</script>
+</body>
+</html>
